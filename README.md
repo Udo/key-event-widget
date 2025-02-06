@@ -133,8 +133,8 @@ The webserver exposes endpoints for managing handlers:
 - `POST /handlers/delete` - Deletes a handler.
 
 ## Logs
-- `log/key.log` - Logs key presses and script executions.
-- `log/webserver.log` - Logs webserver activity.
+- `/var/log/key.log` - Logs key presses and script executions.
+- `/var/log/webserver.log` - Logs webserver activity.
 
 ## Security Warning
 The webserver **is completely unsecured and lacks authentication**. Users should:
