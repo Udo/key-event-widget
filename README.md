@@ -92,7 +92,7 @@ Alternatively, you can start the `webserver` using `/etc/crontab`. Add the follo
 ```sh
 @reboot root /path/to/key-event-widget/webserver >> /path/to/key-event-widget/log/webserver.log 2>&1
 ```
-This ensures that the webserver starts automatically upon reboot. 
+This ensures that the webserver starts automatically upon reboot.
 
 If using the webserver, ensure it's secured before exposing it publicly.
 
@@ -102,6 +102,7 @@ Each key event can trigger a shell script based on a naming scheme:
 - `key-<device>-<event_type>`
 - `key-<key_code>-<event_type>`
 - `key-<event_type>`
+More information about this in the next section.
 
 Example script handler:
 ```sh
@@ -122,6 +123,21 @@ Place the script in `handlers/`, make it executable:
 ```sh
 chmod +x handlers/key-<your-key-handler>
 ```
+
+## Key Handler Details
+
+The script will stop calling event handlers after it found the first matching one. If you want it to instead try and call every possible matching handler, set the MATCH variable in the keyservice script to "all".
+
+For example, let's say you press key number 96 on a numpad called 'SEM USB Keyboard'. keyservice will try the following handler scripts and invoke the first one of these it can actually find:
+
+- 'key-usb-1c1b400-usb-1-input0-96-down'
+- 'key-usb-1c1b400-usb-1-input0-down'
+- 'key-SEM USB Keyboard-96-down'
+- 'key-SEM USB Keyboard-down'
+- 'key-96-down'
+- 'key-down'
+
+The script handlers start with a very specific name matching the USB port, model and the key exactly. Then it tries further handlers with less and less specific names until we're finally at 'key-down' which triggers for all key presses.
 
 ## Web API
 The webserver exposes endpoints for managing handlers:

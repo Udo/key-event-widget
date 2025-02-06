@@ -8,6 +8,7 @@ import select
 from evdev import InputDevice, ecodes
 
 LOG_DIR = "/var/log/"
+MATCH = "first" # <-- put in "all" if you want to trigger all possible event handlers and not stop after the first matching one was found
 
 logging.basicConfig(
 	filename=f"{LOG_DIR}key-events.log",
@@ -66,12 +67,8 @@ try:
 							was_handled = False
 							for hnd in khandlers:
 								was_handled = execute_script(hnd, key_code, device.name, device.path)
-								if was_handled:
+								if was_handled and MATCH == "first":
 									break;
-							if was_handled:
-								print(was_handled, event_description)
-							else:
-								print("tried", khandlers)
 							logging.info(khandlers)
 			except OSError:
 				pass  # Ignore disconnected devices
