@@ -139,15 +139,6 @@ For example, let's say you press key number 96 on a numpad called 'SEM USB Keybo
 
 The script handlers start with a very specific name matching the USB port, model and the key exactly. Then it tries further handlers with less and less specific names until we're finally at 'key-down' which triggers for all key presses.
 
-## Web API
-The webserver exposes endpoints for managing handlers:
-- `GET /log` - Fetches the last 10 log entries.
-- `GET /handlers` - Lists available handlers.
-- `GET /handlers/content?filename=<file>` - Retrieves a handler's content.
-- `POST /handlers/add` - Creates a new handler.
-- `POST /handlers/edit` - Updates an existing handler.
-- `POST /handlers/delete` - Deletes a handler.
-
 ## Logs
 - `/var/log/key.log` - Logs key presses and script executions.
 - `/var/log/webserver.log` - Logs webserver activity.
