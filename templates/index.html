@@ -65,7 +65,9 @@
             try {
                 let response = await fetch("/log");
                 let data = await response.json();
-                document.getElementById("log").innerText = data.log.join("\n");
+                let update_text = data.log.join("\n");
+                if(update_text != document.getElementById("log").innerText)
+					document.getElementById("log").innerText = update_text;
             } catch (error) {
                 console.error("Failed to fetch log:", error);
             }
