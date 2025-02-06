@@ -127,7 +127,7 @@
         }
 
         async function renameHandler(original_name) {
-            let filename = prompt("Enter new handler name:");
+            let filename = prompt("Rename handler:", original_name);
             if (filename) {
 				apiAction("/handlers/rename", { filename : original_name, rename : filename });
             }

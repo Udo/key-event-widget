@@ -70,6 +70,7 @@ async def list_handlers(request):
 	"""Serve the list of handler scripts."""
 	try:
 		handlers = [f.name for f in pathlib.Path(handlers_dir).glob("*") if f.is_file()]
+		handlers.sort(key=str.casefold)
 		return web.json_response(handlers)
 	except Exception as e:
 		logging.error(f"Error listing handlers: {e}")
