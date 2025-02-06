@@ -16,30 +16,30 @@ PORT = 80
 LOG_DIR = "/var/log/"
 
 logging.basicConfig(
-    filename=f"{LOG_DIR}key-events-webserver.log",
-    level=logging.INFO,
-    format="%(asctime)s - %(message)s")
+	filename=f"{LOG_DIR}key-events.log",
+	level=logging.INFO,
+	format="%(asctime)s - %(message)s")
 
 log_file = f"{LOG_DIR}key-events.log"
 handlers_dir = "handlers"
 keyservice_executable = "./keyservice"
 
 def is_keyservice_running():
-    """Check if keyservice is already running."""
-    try:
-        result = subprocess.run(["pgrep", "-f", keyservice_executable], capture_output=True, text=True)
-        return result.returncode == 0  # Return True if process is found
-    except Exception as e:
-        logging.error(f"Error checking keyservice process: {e}")
-        return False
+	"""Check if keyservice is already running."""
+	try:
+		result = subprocess.run(["pgrep", "-f", keyservice_executable], capture_output=True, text=True)
+		return result.returncode == 0  # Return True if process is found
+	except Exception as e:
+		logging.error(f"Error checking keyservice process: {e}")
+		return False
 
 def start_keyservice():
-    """Start keyservice if not already running."""
-    if not is_keyservice_running():
-        logging.info("Starting keyservice...")
-        subprocess.Popen([keyservice_executable], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    else:
-        logging.info("Keyservice already running.")
+	"""Start keyservice if not already running."""
+	if not is_keyservice_running():
+		logging.info("Starting keyservice...")
+		subprocess.Popen([keyservice_executable], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+	else:
+		logging.info("Keyservice already running.")
 
 # Ensure keyservice is running on startup
 start_keyservice()
@@ -48,107 +48,142 @@ start_keyservice()
 template_env = Environment(loader=FileSystemLoader("templates"))
 
 def render_template(template_name, **context):
-    template = template_env.get_template(template_name)
-    return template.render(context)
+	template = template_env.get_template(template_name)
+	return template.render(context)
 
 async def get_log(request):
-    """Serve the last 10 lines of the log file."""
-    try:
-        process = await asyncio.create_subprocess_exec(
-            "tail", "-n", "10", log_file,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
-        )
-        stdout, _ = await process.communicate()
-        lines = stdout.decode().strip().split("\n")
-        return web.json_response({"log": lines})
-    except Exception as e:
-        logging.error(f"Error reading log file: {e}")
-        return web.json_response({"error": "Failed to read log file"}, status=500)
+	"""Serve the last 10 lines of the log file."""
+	try:
+		process = await asyncio.create_subprocess_exec(
+			"tail", "-n", "10", log_file,
+			stdout=asyncio.subprocess.PIPE,
+			stderr=asyncio.subprocess.PIPE
+		)
+		stdout, _ = await process.communicate()
+		lines = stdout.decode().strip().split("\n")
+		return web.json_response({"log": lines})
+	except Exception as e:
+		logging.error(f"Error reading log file: {e}")
+		return web.json_response({"error": "Failed to read log file"}, status=500)
 
 async def list_handlers(request):
-    """Serve the list of handler scripts."""
-    try:
-        handlers = [f.name for f in pathlib.Path(handlers_dir).glob("*") if f.is_file()]
-        return web.json_response(handlers)
-    except Exception as e:
-        logging.error(f"Error listing handlers: {e}")
-        return web.json_response({"error": "Failed to list handlers"}, status=500)
+	"""Serve the list of handler scripts."""
+	try:
+		handlers = [f.name for f in pathlib.Path(handlers_dir).glob("*") if f.is_file()]
+		return web.json_response(handlers)
+	except Exception as e:
+		logging.error(f"Error listing handlers: {e}")
+		return web.json_response({"error": "Failed to list handlers"}, status=500)
 
 async def get_handler_content(request):
-    """Serve the content of a specific handler script."""
-    filename = request.query.get("filename")
-    if not filename:
-        return web.json_response({"error": "Missing filename parameter"}, status=400)
+	"""Serve the content of a specific handler script."""
+	filename = request.query.get("filename")
+	if not filename:
+		return web.json_response({"error": "Missing filename parameter"}, status=400)
 
-    file_path = os.path.join(handlers_dir, filename)
-    if not os.path.exists(file_path):
-        return web.json_response({"error": "File not found"}, status=404)
+	file_path = os.path.join(handlers_dir, filename)
+	if not os.path.exists(file_path):
+		return web.json_response({"error": "File not found"}, status=404)
 
-    try:
-        async with aiofiles.open(file_path, "r") as f:
-            content = await f.read()
-        return web.json_response({"content": content})
-    except Exception as e:
-        logging.error(f"Error reading handler file {filename}: {e}")
-        return web.json_response({"error": "Failed to read file"}, status=500)
+	try:
+		async with aiofiles.open(file_path, "r") as f:
+			content = await f.read()
+		return web.json_response({"content": content})
+	except Exception as e:
+		logging.error(f"Error reading handler file {filename}: {e}")
+		return web.json_response({"error": "Failed to read file"}, status=500)
 
 async def delete_handler(request):
-    data = await request.json()
-    file_path = os.path.join(handlers_dir, data["filename"])
+	data = await request.json()
+	file_path = os.path.join(handlers_dir, data["filename"])
 
-    if os.path.exists(file_path):
-        os.remove(file_path)
-        logging.info(f"Deleted handler: {data['filename']}")
-        return web.json_response({"status": "deleted"})
-    return web.json_response({"status": "not found"}, status=404)
+	if os.path.exists(file_path):
+		os.remove(file_path)
+		logging.info(f"Deleted handler: {data['filename']}")
+		return web.json_response({"status": "deleted"})
+	return web.json_response({"status": "not found"}, status=404)
+
+async def rename_handler(request):
+	data = await request.json()
+	file_path = os.path.join(handlers_dir, data["filename"])
+	rename_path = os.path.join(handlers_dir, data["rename"])
+
+	if os.path.exists(file_path):
+		os.rename(file_path, rename_path)
+		logging.info(f"Renamed handler: {data['filename']} to {data['rename']}")
+		return web.json_response({"status": "renamed"})
+
+	return web.json_response({"status": "not found"}, status=404)
 
 async def trigger_handler(request):
-    data = await request.json()
-    file_path = os.path.join(handlers_dir, data["filename"])
+	data = await request.json()
+	file_path = os.path.join(handlers_dir, data["filename"])
 
-    if os.path.exists(file_path):
-        logging.info(f"Manually triggered handler: {data['filename']}")
-        logging.info(os.system(f"'./handlers/{file_path}' 001 'TEST_DEVICE' 'TEST_PATH'"))
+	if os.path.exists(file_path):
+		process = await asyncio.create_subprocess_exec(
+			file_path, "001", "TEST_DEVICE", "TEST_PATH",
+			stdout=asyncio.subprocess.PIPE,
+			stderr=asyncio.subprocess.PIPE
+		)
 
-    return web.json_response({"status": "triggered"})
+		stdout, stderr = await process.communicate()
+
+		output = stdout.decode().strip()
+		error = stderr.decode().strip()
+
+		try:
+			output_json = json.loads(output)
+		except json.JSONDecodeError:
+			output_json = output
+
+		logging.info(f"Manually triggered handler: {data['filename']} with output: {output}")
+
+		return web.json_response({
+			"status": "triggered",
+			"output": output_json,
+			"error": error,
+			"returncode": process.returncode
+		})
+	else:
+		logging.warning(f"Handler file not found: {data['filename']}")
+		return web.json_response({"status": "error", "message": "File not found"}, status=404)
 
 async def add_handler(request):
-    data = await request.json()
-    file_path = os.path.join(handlers_dir, data["filename"])
+	data = await request.json()
+	file_path = os.path.join(handlers_dir, data["filename"])
 
-    async with aiofiles.open(file_path, "w") as f:
-        await f.write(data.get("content", ""))
+	async with aiofiles.open(file_path, "w") as f:
+		await f.write(data.get("content", ""))
 
-    try:
-        os.chmod(file_path, 0o755)  # Ensure the file is executable
-        logging.info(f"Added and set executable permission for handler: {data['filename']}")
-    except Exception as e:
-        logging.error(f"Failed to set executable permission for {data['filename']}: {e}")
+	try:
+		os.chmod(file_path, 0o755)  # Ensure the file is executable
+		logging.info(f"Added and set executable permission for handler: {data['filename']}")
+	except Exception as e:
+		logging.error(f"Failed to set executable permission for {data['filename']}: {e}")
 
-    return web.json_response({"status": "created"})
+	return web.json_response({"status": "created"})
 
 async def edit_handler(request):
-    data = await request.json()
-    file_path = os.path.join(handlers_dir, data["filename"])
+	data = await request.json()
+	file_path = os.path.join(handlers_dir, data["filename"])
 
-    if not os.path.exists(file_path):
-        return web.json_response({"status": "not found"}, status=404)
+	if not os.path.exists(file_path):
+		return web.json_response({"status": "not found"}, status=404)
 
-    async with aiofiles.open(file_path, "w") as f:
-        await f.write(data["content"])
+	async with aiofiles.open(file_path, "w") as f:
+		await f.write(data["content"])
 
-    try:
-        os.chmod(file_path, 0o755)  # Ensure file remains executable after edit
-        logging.info(f"Edited and set executable permission for handler: {data['filename']}")
-    except Exception as e:
-        logging.error(f"Failed to set executable permission for {data['filename']}: {e}")
+	try:
+		os.chmod(file_path, 0o755)  # Ensure file remains executable after edit
+		logging.info(f"Edited and set executable permission for handler: {data['filename']}")
+	except Exception as e:
+		logging.error(f"Failed to set executable permission for {data['filename']}: {e}")
 
-    return web.json_response({"status": "updated"})
+	return web.json_response({"status": "updated"})
 
 async def index(request):
-    handlers = await list_handlers(request)
-    return web.Response(text=render_template("index.html", handlers=handlers), content_type='text/html')
+	handlers = await list_handlers(request)
+	return web.Response(text=render_template("index.html", handlers=handlers), content_type='text/html')
 
 app = web.Application()
 app.router.add_get("/", index)
@@ -157,9 +192,10 @@ app.router.add_get("/handlers", list_handlers)
 app.router.add_get("/handlers/content", get_handler_content)
 app.router.add_post("/handlers/add", add_handler)
 app.router.add_post("/handlers/delete", delete_handler)
+app.router.add_post("/handlers/rename", rename_handler)
 app.router.add_post("/handlers/trigger", trigger_handler)
 app.router.add_post("/handlers/edit", edit_handler)
 
 if __name__ == "__main__":
-    logging.info(f"Starting web server on port {PORT}...")
-    web.run_app(app, port=PORT, access_log=None)
+	logging.info(f"Starting web server on port {PORT}...")
+	web.run_app(app, port=PORT, access_log=None)

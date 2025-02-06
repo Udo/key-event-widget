@@ -96,6 +96,7 @@
 
 				createButton(li, "Trigger", () =>{ apiAction("/handlers/trigger", { filename : handler }) });
 				createButton(li, "Edit", () => editHandler(handler));
+				createButton(li, "Rename", () => renameHandler(handler));
 				createButton(li, "Delete", () => confirmDelete(handler));
 
                 handlerList.appendChild(li);
@@ -109,23 +110,26 @@
         }
 
         async function apiAction(endpoint, content = {}) {
-            await fetch(endpoint, {
+            var res = await fetch(endpoint, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(content)
             });
+            console.log(await res.json());
             fetchHandlers();
         }
 
         async function addHandler() {
             let filename = prompt("Enter new handler name:");
             if (filename) {
-                await fetch("/handlers/add", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ filename, content: "#!/bin/bash\necho Handler executed" })
-                });
-                fetchHandlers();
+				apiAction("/handlers/add", { filename, content: "#!/bin/bash\necho Handler executed" });
+            }
+        }
+
+        async function renameHandler(original_name) {
+            let filename = prompt("Enter new handler name:");
+            if (filename) {
+				apiAction("/handlers/rename", { filename : original_name, rename : filename });
             }
         }
 
