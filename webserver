@@ -164,9 +164,9 @@ async def add_handler(request):
 
 	try:
 		os.chmod(file_path, 0o755)  # Ensure the file is executable
-		logging.info(f"Added and set executable permission for handler: {data['filename']}")
+		logging.info(f"Added handler: {data['filename']}")
 	except Exception as e:
-		logging.error(f"Failed to set executable permission for {data['filename']}: {e}")
+		logging.error(f"Failed to add {data['filename']}: {e}")
 
 	return web.json_response({"status": "created"})
 
@@ -182,9 +182,9 @@ async def edit_handler(request):
 
 	try:
 		os.chmod(file_path, 0o755)  # Ensure file remains executable after edit
-		logging.info(f"Edited and set executable permission for handler: {data['filename']}")
+		logging.info(f"Edited handler: {data['filename']}")
 	except Exception as e:
-		logging.error(f"Failed to set executable permission for {data['filename']}: {e}")
+		logging.error(f"Failed edit {data['filename']}: {e}")
 
 	return web.json_response({"status": "updated"})
 
