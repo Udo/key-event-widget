@@ -48,14 +48,17 @@ Start the web interface:
 ```sh
 ./webserver
 ```
-The webserver runs on port `8080` by default and allows you to manage key event handlers. **It will automatically start `keyservice` if it's not already running.**
+The webserver runs on port `80` by default and allows you to manage key event handlers. **It will automatically start `keyservice` if it's not already running.**
+
+You can modify the port by changing the PORT variable in the webserver script.
 
 Access it via a web browser at:
 ```
-http://localhost:8080
+http://localhost/
 ```
 
 ### Running on System Startup
+#### Using systemd
 To start `keyservice` on boot, you can create a systemd service:
 1. Create a new service file:
    ```sh
@@ -84,6 +87,13 @@ To start `keyservice` on boot, you can create a systemd service:
    sudo systemctl start keyservice
    ```
 
+#### Using crontab
+Alternatively, you can start the `webserver` using `/etc/crontab`. Add the following line to `/etc/crontab` to ensure it starts on boot:
+```sh
+@reboot yourusername /path/to/key-event-widget/webserver >> /path/to/key-event-widget/log/webserver.log 2>&1
+```
+This ensures that the webserver starts automatically upon reboot. Make sure to replace `yourusername` with your actual username.
+
 If using the webserver, ensure it's secured before exposing it publicly.
 
 ## Key Handlers
@@ -97,6 +107,15 @@ Example script handler:
 ```sh
 #!/bin/bash
 echo "Key $1 pressed on $2 ($3)" >> log/events.log
+```
+
+Example handler for OBS scene switching via the OBS WebSocket API:
+```sh
+#!/bin/bash
+SCENE_NAME="MyScene"
+curl -X POST "http://localhost:4455/obs-api" \
+     -H "Content-Type: application/json" \
+     -d '{"request-type": "SetCurrentProgramScene", "scene-name": "'$SCENE_NAME'"}'
 ```
 
 Place the script in `handlers/`, make it executable:
