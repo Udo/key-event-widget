@@ -1,3 +1,3 @@
 #!/bin/bash
-
+# Generic key up example handler
 echo "key-up" "$1" "$2" "$3"
