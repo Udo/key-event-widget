@@ -1,0 +1,82 @@
+#!venv/bin/python3
+
+import evdev
+import os
+import logging
+import time
+import select
+from evdev import InputDevice, ecodes
+
+LOG_DIR = "/var/log/"
+
+logging.basicConfig(
+	filename=f"{LOG_DIR}key-events.log",
+	level=logging.INFO,
+	format="%(asctime)s - %(message)s"
+)
+
+def find_devices():
+	devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
+	return devices
+	# return [device for device in devices if "keyboard" in device.name.lower() or "keypad" in device.name.lower() or "media" in device.name.lower()]
+
+def execute_script(script_name, key_code, device_name, device_path):
+	try:
+		if os.path.exists(f"./handlers/{script_name}"):
+			os.system(f"./handlers/{script_name} {key_code} '{device_name}' {device_path}")
+			return script_name
+		else:
+			pass
+			#logging.info(f"Script not found: {script_name}")
+			#print(f"Script not found: {script_name}")
+	except Exception as e:
+		logging.error(f"Error executing script {script_name}: {e}")
+		print(f"Error executing script {script_name}: {e}")
+
+try:
+	for device in find_devices():
+		print(f"Listening for key presses on: {device.path} ({device.name})")
+		logging.info(f"Listening for key presses on: {device.path} ({device.name})")
+
+	while True:
+		devices = find_devices()
+		device_fds = {dev.fd: dev for dev in devices}
+
+		r, _, _ = select.select(device_fds.keys(), [], [], 15)  # Timeout of 5 seconds
+
+		for fd in r:
+			device = device_fds[fd]
+			try:
+				for event in device.read():
+					if event.type == ecodes.EV_KEY or event.type == ecodes.EV_MSC:
+						key_code = event.code
+						event_type = "down" if event.value == 1 else "up" if event.value == 0 else "hold"
+
+						if event_type in ["down", "up"]:
+							device_path = device.phys.replace("/", "-").replace(".", "-")
+							event_description = f"Key {key_code} {event_type} on {device.name} ({device_path})"
+							# print(f"Key {key_code} {event_type} on {device.name} ({device.path})")
+							khandlers = [
+								f"key-{device_path}-{key_code}-{event_type}",
+								f"key-{device_path}-{event_type}",
+								f"key-{device.name}-{key_code}-{event_type}",
+								f"key-{device.name}-{event_type}",
+								f"key-{key_code}-{event_type}",
+								f"key-{event_type}"]
+							was_handled = False
+							for hnd in khandlers:
+								was_handled = execute_script(hnd, key_code, device.name, device.path)
+								if was_handled:
+									break;
+							if was_handled:
+								print(was_handled, event_description)
+							else:
+								print("tried", khandlers)
+							logging.info(khandlers)
+			except OSError:
+				pass  # Ignore disconnected devices
+except Exception as e:
+	logging.error(f"Error: {e}")
+	print(f"Error: {e}")
+
+

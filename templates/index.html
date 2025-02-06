@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Key Widget Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        pre {
+            background: #fff;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow: auto;
+            max-height: 300px;
+        }
+        .handler-list {
+			max-width: 640px;
+			margin: 0;
+			padding: 0;
+		}
+        .handler-list li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+        }
+        .handler-list button {
+            margin-left: 10px;
+        }
+        .editor {
+            display: none;
+            background: white;
+            padding: 15px;
+            border: 1px solid #ddd;
+            margin-top: 10px;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+        }
+    </style>
+    <script>
+        async function fetchLog() {
+            try {
+                let response = await fetch("/log");
+                let data = await response.json();
+                document.getElementById("log").innerText = data.log.join("\n");
+            } catch (error) {
+                console.error("Failed to fetch log:", error);
+            }
+        }
+
+        function startLogPolling() {
+            fetchLog();
+            setInterval(fetchLog, 1000);
+        }
+
+        async function fetchHandlers() {
+            let response = await fetch("/handlers");
+            let handlers = await response.json();
+            let handlerList = document.getElementById("handler-list");
+            handlerList.innerHTML = "";
+            handlers.forEach(handler => {
+                let li = document.createElement("li");
+                li.innerText = handler;
+                let editBtn = document.createElement("button");
+                editBtn.innerText = "Edit";
+                editBtn.onclick = () => editHandler(handler);
+                let delBtn = document.createElement("button");
+                delBtn.innerText = "Delete";
+                delBtn.onclick = () => confirmDelete(handler);
+                li.appendChild(editBtn);
+                li.appendChild(delBtn);
+                handlerList.appendChild(li);
+            });
+        }
+
+        async function confirmDelete(filename) {
+            if (confirm(`Are you sure you want to delete ${filename}?`)) {
+                await deleteHandler(filename);
+            }
+        }
+
+        async function deleteHandler(filename) {
+            await fetch("/handlers/delete", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ filename })
+            });
+            fetchHandlers();
+        }
+
+        async function addHandler() {
+            let filename = prompt("Enter new handler name:");
+            if (filename) {
+                await fetch("/handlers/add", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ filename, content: "#!/bin/bash\necho Handler executed" })
+                });
+                fetchHandlers();
+            }
+        }
+
+        async function editHandler(filename) {
+            let response = await fetch(`/handlers/content?filename=${encodeURIComponent(filename)}`);
+            if (!response.ok) {
+                alert("Failed to fetch handler content");
+                return;
+            }
+            let data = await response.json();
+            document.getElementById("editor-filename").innerText = filename;
+            document.getElementById("editor-content").value = data.content;
+            document.getElementById("handler-editor").style.display = "block";
+        }
+
+        async function saveHandler() {
+            let filename = document.getElementById("editor-filename").innerText;
+            let content = document.getElementById("editor-content").value;
+
+            await fetch("/handlers/edit", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ filename, content })
+            });
+
+            document.getElementById("handler-editor").style.display = "none";
+            fetchHandlers();
+        }
+    </script>
+</head>
+<body onload="startLogPolling(); fetchHandlers();">
+    <h1>Key Logger Dashboard</h1>
+
+    <h2>Live Key Log</h2>
+    <pre id="log">Waiting for log data...</pre>
+
+    <h2>Handlers</h2>
+    <button onclick="addHandler()">Add Handler</button>
+    <ul id="handler-list" class="handler-list"></ul>
+
+    <div id="handler-editor" class="editor">
+        <h2>Editing: <span id="editor-filename"></span></h2>
+        <textarea id="editor-content"></textarea><br>
+        <button onclick="saveHandler()">Save</button>
+        <button onclick="document.getElementById('handler-editor').style.display='none'">Cancel</button>
+    </div>
+</body>
+</html>
