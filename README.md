@@ -12,7 +12,7 @@
 - Provides a web interface for managing key event handlers.
 - Logs key events and executed scripts.
 
-![web interface](https://github.com/Udo/key-event-widget/blob/main/img/screenshot1.jpg?raw=true)
+![web interface](https://github.com/Udo/key-event-widget/blob/main/img/screenshot1.png?raw=true)
 
 ## Beware!
 - I made this for a home automation key pad. Since this checks and executes shell scripts on key press/release, running this program on a desktop computer is probably a bad idea. However, in that use case you can take this thing as an example and modify the file 'keyservice' to execute some Python code when events happen, which should be a lot more performant.
