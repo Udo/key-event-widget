@@ -11,6 +11,9 @@
 - Executes custom shell scripts based on key events.
 - Provides a web interface for managing key event handlers.
 - Logs key events and executed scripts.
+
+## Beware!
+- I made this for a home automation key pad. Since this checks and executes shell scripts on key press/release, running this program on a desktop computer is probably a bad idea. However, in that use case you can use this thing as an example and modify the file 'keyservice' to execute some Python code when events happen, which should be a lot more performant.
 - The webserver **is unsecured and unauthenticated**—users should take steps to restrict access or opt to run `keyservice` standalone.
 
 ## Installation
