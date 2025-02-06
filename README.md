@@ -73,8 +73,8 @@ To start `keyservice` on boot, you can create a systemd service:
    [Service]
    ExecStart=/path/to/key-event-widget/keyservice
    Restart=always
-   User=yourusername
-   Group=yourgroup
+   User=root
+   Group=root
    WorkingDirectory=/path/to/key-event-widget
 
    [Install]
@@ -90,9 +90,9 @@ To start `keyservice` on boot, you can create a systemd service:
 #### Using crontab
 Alternatively, you can start the `webserver` using `/etc/crontab`. Add the following line to `/etc/crontab` to ensure it starts on boot:
 ```sh
-@reboot yourusername /path/to/key-event-widget/webserver >> /path/to/key-event-widget/log/webserver.log 2>&1
+@reboot root /path/to/key-event-widget/webserver >> /path/to/key-event-widget/log/webserver.log 2>&1
 ```
-This ensures that the webserver starts automatically upon reboot. Make sure to replace `yourusername` with your actual username.
+This ensures that the webserver starts automatically upon reboot. 
 
 If using the webserver, ensure it's secured before exposing it publicly.
 
