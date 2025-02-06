@@ -1,7 +1,7 @@
 # key-event-widget
 
 ## Overview
-**key-event-widget** is a Linux program that listens for key presses and triggers shell scripts based on predefined handlers. It consists of two main components:
+**key-event-widget** is a Linux program that listens for key presses and triggers shell scripts based on predefined handlers. Here are its components:
 
 1. **keyservice**: A Python script that monitors for key events and executes corresponding shell scripts.
 2. **webserver**: A minimal web application that allows users to manage shell script handlers via a browser. It also ensures that `keyservice` is running and will start it automatically if it's not already running.
