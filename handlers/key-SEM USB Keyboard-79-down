@@ -1,0 +1,3 @@
+#!/bin/bash
+# Corners lights 1 toggle
+curl -s 'http://automation/events/?cmd=update&set=rfswitch/office/light1&value=toggle'
