@@ -32,21 +32,21 @@
             max-height: 300px;
         }
         .handler-list {
-			max-width: 640px;
 			margin: 0;
 			padding: 0;
 		}
         .handler-list li {
-            display: flex;
+            display: inline-block;
+			max-width: 512px;
             align-items: center;
             justify-content: space-between;
             background: white;
             padding: 8px;
-            margin: 5px 0;
+            margin: 5px;
             border: 1px solid #ddd;
         }
         .handler-list button {
-            margin-left: 10px;
+            xmargin-left: 10px;
         }
         .editor {
             display: none;
@@ -97,7 +97,7 @@
                 let friendly_name = '';
                 if(h.head[1] && h.head[1].length > 0 && h.head[1].substr(0, 1) == '#')
 					friendly_name = "<b style=\"color:gray;\">"+h.head[1]+"</b><br/>";
-                li.innerHTML = '<div style="min-width:50%;white-space:pre;">'+friendly_name+handler+'</div>';
+                li.innerHTML = '<div style="padding:4px;white-space:pre;">'+friendly_name+handler+'</div>';
 
 				createButton(li, "Trigger", () =>{ apiAction("/handlers/trigger", { filename : handler }) });
 				createButton(li, "Edit", () => editHandler(handler));
