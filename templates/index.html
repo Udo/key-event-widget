@@ -78,6 +78,13 @@
             setInterval(fetchLog, 1000);
         }
 
+		function createButton(parent, caption, onclick) {
+			let leBtn = document.createElement("button");
+			leBtn.innerText = caption;
+			leBtn.onclick = onclick;
+			parent.appendChild(leBtn);
+		}
+
         async function fetchHandlers() {
             let response = await fetch("/handlers");
             let handlers = await response.json();
@@ -85,30 +92,27 @@
             handlerList.innerHTML = "";
             handlers.forEach(handler => {
                 let li = document.createElement("li");
-                li.innerText = handler;
-                let editBtn = document.createElement("button");
-                editBtn.innerText = "Edit";
-                editBtn.onclick = () => editHandler(handler);
-                let delBtn = document.createElement("button");
-                delBtn.innerText = "Delete";
-                delBtn.onclick = () => confirmDelete(handler);
-                li.appendChild(editBtn);
-                li.appendChild(delBtn);
+                li.innerHTML = '<div style="min-width:50%;white-space:pre;">'+handler+'</div>';
+
+				createButton(li, "Trigger", () =>{ apiAction("/handlers/trigger", { filename : handler }) });
+				createButton(li, "Edit", () => editHandler(handler));
+				createButton(li, "Delete", () => confirmDelete(handler));
+
                 handlerList.appendChild(li);
             });
         }
 
         async function confirmDelete(filename) {
             if (confirm(`Are you sure you want to delete ${filename}?`)) {
-                await deleteHandler(filename);
+                await apiAction("/handlers/delete", { filename });
             }
         }
 
-        async function deleteHandler(filename) {
-            await fetch("/handlers/delete", {
+        async function apiAction(endpoint, content = {}) {
+            await fetch(endpoint, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ filename })
+                body: JSON.stringify(content)
             });
             fetchHandlers();
         }

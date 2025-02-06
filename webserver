@@ -103,6 +103,16 @@ async def delete_handler(request):
         return web.json_response({"status": "deleted"})
     return web.json_response({"status": "not found"}, status=404)
 
+async def trigger_handler(request):
+    data = await request.json()
+    file_path = os.path.join(handlers_dir, data["filename"])
+
+    if os.path.exists(file_path):
+        logging.info(f"Manually triggered handler: {data['filename']}")
+        logging.info(os.system(f"'./handlers/{file_path}' 001 'TEST_DEVICE' 'TEST_PATH'"))
+
+    return web.json_response({"status": "triggered"})
+
 async def add_handler(request):
     data = await request.json()
     file_path = os.path.join(handlers_dir, data["filename"])
@@ -147,6 +157,7 @@ app.router.add_get("/handlers", list_handlers)
 app.router.add_get("/handlers/content", get_handler_content)
 app.router.add_post("/handlers/add", add_handler)
 app.router.add_post("/handlers/delete", delete_handler)
+app.router.add_post("/handlers/trigger", trigger_handler)
 app.router.add_post("/handlers/edit", edit_handler)
 
 if __name__ == "__main__":

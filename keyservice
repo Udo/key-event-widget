@@ -24,7 +24,7 @@ def find_devices():
 def execute_script(script_name, key_code, device_name, device_path):
 	try:
 		if os.path.exists(f"./handlers/{script_name}"):
-			os.system(f"./handlers/{script_name} {key_code} '{device_name}' {device_path}")
+			os.system(f"'./handlers/{script_name}' {key_code} '{device_name}' {device_path}")
 			return script_name
 		else:
 			pass
