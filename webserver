@@ -67,10 +67,16 @@ async def get_log(request):
 		return web.json_response({"error": "Failed to read log file"}, status=500)
 
 async def list_handlers(request):
-	"""Serve the list of handler scripts."""
+	"""Serve the list of handler scripts with their first three lines."""
 	try:
-		handlers = [f.name for f in pathlib.Path(handlers_dir).glob("*") if f.is_file()]
-		handlers.sort(key=str.casefold)
+		handlers = []
+		for f in pathlib.Path(handlers_dir).glob("*"):
+			if f.is_file():
+				with open(f, 'r') as file:
+					head = [line.strip() for line in [file.readline() for _ in range(3)] if line.strip()]
+				handlers.append({"filename": f.name, "head": head})
+
+		handlers.sort(key=lambda x: x['filename'].casefold())
 		return web.json_response(handlers)
 	except Exception as e:
 		logging.error(f"Error listing handlers: {e}")

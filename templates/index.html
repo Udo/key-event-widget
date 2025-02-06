@@ -90,9 +90,14 @@
             let handlers = await response.json();
             let handlerList = document.getElementById("handler-list");
             handlerList.innerHTML = "";
-            handlers.forEach(handler => {
+            handlers.forEach(h => {
+				let handler = h.filename;
+
                 let li = document.createElement("li");
-                li.innerHTML = '<div style="min-width:50%;white-space:pre;">'+handler+'</div>';
+                let friendly_name = '';
+                if(h.head[1] && h.head[1].length > 0 && h.head[1].substr(0, 1) == '#')
+					friendly_name = "<b>"+h.head[1]+"</b><br/>";
+                li.innerHTML = '<div style="min-width:50%;white-space:pre;">'+friendly_name+handler+'</div>';
 
 				createButton(li, "Trigger", () =>{ apiAction("/handlers/trigger", { filename : handler }) });
 				createButton(li, "Edit", () => editHandler(handler));
@@ -122,7 +127,7 @@
         async function addHandler() {
             let filename = prompt("Enter new handler name:");
             if (filename) {
-				apiAction("/handlers/add", { filename, content: "#!/bin/bash\necho Handler executed" });
+				apiAction("/handlers/add", { filename, content: "#!/bin/bash\n#Friendly name\necho Handler executed" });
             }
         }
 
